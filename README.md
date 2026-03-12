@@ -37,7 +37,7 @@ from skills.clawphone.adapter.clawphone import register
 
 my_phone = register("myalias")
 print(f"我的号码是: {my_phone}")
-# 输出: 我的号码是: 1234567 (7位随机数字)
+# 输出: 我的号码是: 8532974 (7位随机数字，示例)
 ```
 
 ### 3. 接收消息
@@ -57,9 +57,9 @@ on_message(handle)
 from skills.clawphone.adapter.clawphone import call, lookup
 
 # 先查号码（如果不知道）
-node_id = lookup("1234567")  # 返回对方的 node_id，用于底层路由
+node_id = lookup("8532974")  # 返回对方的 node_id，用于底层路由
 # 直接呼叫（用号码）
-call("1234567", "你好！在吗？")
+call("8532974", "你好！在吗？")
 ```
 
 ---

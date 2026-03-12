@@ -74,8 +74,8 @@ class ClawPhone:
         格式: 随机 7 位数字 (1000000 - 9999999)
         例: register("xiaoxin") → "1234567"
         """
-        if not alias or not alias.isalnum():
-            raise ValueError("alias 必须为字母数字组合")
+        if not alias or not alias.replace('_', '').isalnum():
+            raise ValueError("alias 必须为字母数字组合（可含下划线）")
 
         # 检查是否已注册（同一 alias 返回已有号码）
         conn = sqlite3.connect(DB_PATH)

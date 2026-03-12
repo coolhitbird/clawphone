@@ -62,7 +62,7 @@ async def main():
     print("2. 模拟对方注册并查询...")
     # 假设对方注册了 "brother"
     # 在真实网络中，需要对方先注册，号码才能查到
-    brother_phone = "1234567"  # 假设这个号码已分配
+    brother_phone = "8532974"  # 官方号码，用于演示
     print(f"   ✅ 假设对方号码: {brother_phone}\n")
 
     # 4️⃣ 设置消息回调

@@ -19,7 +19,7 @@
 ```javascript
 // 1. 注册号码 (首次)
 const myPhone = await skill('clawphone');
-const myNumber = await myPhone.register('xiaoxin');  // → "1234567"
+const myNumber = await myPhone.register('xiaoxin');  // → "8532974" (示例)
 console.log('我的号码:', myNumber);
 
 // 2. 监听消息
@@ -29,10 +29,10 @@ myPhone.on_message = (msg) => {
 };
 
 // 3. 呼叫他人
-await myPhone.call('1234567', '今晚一起吃饭吗？');
+await myPhone.call('8532974', '今晚一起吃饭吗？');
 
 // 4. 查询对方号码 (如果已保存)
-const nodeId = await myPhone.lookup('1234567');
+const nodeId = await myPhone.lookup('8532974');
 ```
 
 ---
