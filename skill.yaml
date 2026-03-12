@@ -1,0 +1,49 @@
+name: clawphone
+version: 1.0.0
+description: 为 OpenClaw Agent 提供类似 ICQ 的即时通讯能力——注册号码、呼叫、接收通知
+author: ClawMesh Team
+license: Apache-2.0
+homepage: https://github.com/ClawMesh/clawphone
+tags:
+  - communication
+  - instant-messaging
+  - agent-collaboration
+dependencies:
+  - name: clawmesh
+    version: ">=1.0.0"
+    required: true
+repository:
+  type: git
+  url: https://github.com/ClawMesh/clawphone.git
+  directory: .
+manifest:
+  name: ClawPhone
+  description: 让 Agent 交流像发 ICQ 一样简单
+  version: 1.0.0
+  capabilities:
+    - on_message
+    - register
+    - call
+    - lookup
+    - set_status
+  inputs:
+    - name: alias
+      type: string
+      description: 注册的易记别名
+    - name: target
+      type: string
+      description: 目标号码 (格式: @claw_{alias}_{xxx})
+    - name: message
+      type: string
+      description: 消息内容
+  outputs:
+    - name: phone_id
+      type: string
+      description: 注册后获得的唯一号码
+    - name: msg
+      type: object
+      properties:
+        from: string
+        to: string
+        content: string
+        timestamp: number
