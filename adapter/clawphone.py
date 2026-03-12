@@ -86,9 +86,9 @@ class ClawPhone:
             conn.close()
             return row[0]  # 已存在，返回已有号码
 
-        # 生成唯一 7 位数字号码
+        # 生成唯一 10 位数字号码
         for _ in range(100):  # 尝试100次避免冲突
-            phone_id = str(random.randint(1000000, 9999999))
+            phone_id = str(random.randint(1000000000, 9999999999))
             cur.execute("SELECT 1 FROM phones WHERE phone_id = ?", (phone_id,))
             if not cur.fetchone():
                 break
@@ -111,7 +111,7 @@ class ClawPhone:
         """
         查询目标号码对应的 node_id
         target 可以是:
-        - 7 位数字号码: "1234567"
+        - 10 位数字号码: "1234567890"
         - alias (注册时的别名): "xiaoxin"
         """
         target = target.strip()
@@ -119,8 +119,8 @@ class ClawPhone:
         conn = sqlite3.connect(DB_PATH)
         cur = conn.cursor()
 
-        # 先尝试 phone_id (7位数字)
-        if target.isdigit() and len(target) == 7:
+        # 先尝试 phone_id (10位数字)
+        if target.isdigit() and len(target) == 10:
             cur.execute("SELECT node_id FROM phones WHERE phone_id = ?", (target,))
             row = cur.fetchone()
             if row and row[0]:
