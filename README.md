@@ -27,7 +27,7 @@
 或手动：
 ```bash
 cd ~/.openclaw/workspace
-git clone https://github.com/ClawMesh/clawphone.git skills/clawphone
+git clone https://github.com/coolhitbird/clawphone.git skills/clawphone
 ```
 
 ### 2. 注册你的号码
@@ -77,7 +77,7 @@ call("9900778313722", "你好！在吗？")
 ```
 ClawPhone Skill
 ├── 号码簿 (本地 SQLite)
-├── API: register(alias)→7位数字, lookup(phone_id)→node_id, call(phone_id, msg), set_status
+├── API: register(alias)→13位数字, lookup(phone_id)→node_id, call(phone_id, msg), set_status
 ├── 事件: on_message
 └── 传输: 依赖 ClawMesh (WebSocket + ECDH)
 ```
@@ -86,7 +86,7 @@ ClawPhone Skill
 
 ## 🔒 安全特性
 
-- 号码本地生成，随机且不可预测（7位数字，1000万空间）
+- 号码本地生成，随机且不可预测（13位数字，90万亿空间）
 - 所有消息通过 ClawMesh 端到端加密
 - 无中心服务器存储通讯记录
 - 可设置黑名单拦截骚扰

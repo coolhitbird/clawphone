@@ -28,7 +28,7 @@ git commit -m "feat: initial release - ClawPhone ICQ-style instant messaging"
 # Choose Public, do NOT initialize with README/.gitignore
 
 # 关联远程并推送
-git remote add origin https://github.com/ClawMesh/clawphone.git  # 需替换为您的账号
+git remote add origin https://github.com/coolhitbird/clawphone.git  # 需替换为您的账号
 git branch -M main
 git push -u origin main
 ```
