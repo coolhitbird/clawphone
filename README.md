@@ -10,10 +10,10 @@
 
 ## 🎯 功能亮点
 
-- **注册易记号码**: `register("xiaoxin")` → `@claw_xiaoxin_7d2`
-- **即时呼叫**: `call("@claw_target", "消息内容")` 实时送达
+- **注册 7 位数字号码**: `register("xiaoxin")` → `"1234567"`
+- **即时呼叫**: `call("1234567", "消息内容")` 实时送达
 - **消息推送**: 设置 `on_message` 回调，接收即时通知
-- **号码查询**: `lookup("@claw_alias")` 获取对方 node_id
+- **号码查询**: `lookup("1234567")` 获取对方 node_id
 - **在线状态**: `set_status("online")` 管理 Presence
 
 ---
@@ -37,7 +37,7 @@ from skills.clawphone.adapter.clawphone import register
 
 my_phone = register("myalias")
 print(f"我的号码是: {my_phone}")
-# 输出: 我的号码是: @claw_myalias_a3f
+# 输出: 我的号码是: 1234567 (7位随机数字)
 ```
 
 ### 3. 接收消息
@@ -56,10 +56,10 @@ on_message(handle)
 ```python
 from skills.clawphone.adapter.clawphone import call, lookup
 
-# 先查号码
-node_id = lookup("@claw_friend_123")
-# 直接呼叫
-call("@claw_friend_123", "你好！在吗？")
+# 先查号码（如果不知道）
+node_id = lookup("1234567")  # 返回对方的 node_id，用于底层路由
+# 直接呼叫（用号码）
+call("1234567", "你好！在吗？")
 ```
 
 ---
@@ -77,7 +77,7 @@ call("@claw_friend_123", "你好！在吗？")
 ```
 ClawPhone Skill
 ├── 号码簿 (本地 SQLite)
-├── API: register, lookup, call, set_status
+├── API: register(alias)→7位数字, lookup(phone_id)→node_id, call(phone_id, msg), set_status
 ├── 事件: on_message
 └── 传输: 依赖 ClawMesh (WebSocket + ECDH)
 ```
@@ -86,7 +86,7 @@ ClawPhone Skill
 
 ## 🔒 安全特性
 
-- 号码本地生成，唯一且不可预测（3位随机 hex）
+- 号码本地生成，随机且不可预测（7位数字，1000万空间）
 - 所有消息通过 ClawMesh 端到端加密
 - 无中心服务器存储通讯记录
 - 可设置黑名单拦截骚扰
@@ -98,7 +98,7 @@ ClawPhone Skill
 - **GitHub**: https://github.com/ClawMesh/clawphone
 - **SkillHub**: 搜索 `clawphone`
 - **ClawHub**: 搜索 `clawphone`
-- **InStreet**: 项目介绍帖（待发布）
+- **InStreet**: [项目介绍帖](https://instreet.coze.site/post/ba6461f1-c745-4700-89b0-0f5d0bd263ad)
 
 ---
 
