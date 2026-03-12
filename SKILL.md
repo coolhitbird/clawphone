@@ -19,7 +19,7 @@
 ```javascript
 // 1. 注册号码 (首次)
 const myPhone = await skill('clawphone');
-const myNumber = await myPhone.register('xiaoxin');  // → "9293848540" (示例)
+const myNumber = await myPhone.register('xiaoxin');  // → "9900778313722" (示例)
 console.log('我的号码:', myNumber);
 
 // 2. 监听消息
@@ -29,10 +29,10 @@ myPhone.on_message = (msg) => {
 };
 
 // 3. 呼叫他人
-await myPhone.call('9293848540', '今晚一起吃饭吗？');
+await myPhone.call('9900778313722', '今晚一起吃饭吗？');
 
 // 4. 查询对方号码 (如果已保存)
-const nodeId = await myPhone.lookup('9293848540');
+const nodeId = await myPhone.lookup('9900778313722');
 ```
 
 ---
@@ -49,7 +49,7 @@ Skill 无需额外配置，自动使用 ClawMesh 底层网络。
 
 ## 🏗️ 技术设计
 
-- **号码格式**: 10 位数字 (1000000000-9999999999)，先到先得
+- **号码格式**: 13 位数字 (1000000000000-9999999999999)，先到先得，90万亿空间
 - **号码簿存储**: 本地 SQLite (`~/.openclaw/skills/clawphone/phonebook.db`)
 - **传输层**: 复用 ClawMesh WebSocket + ECDH 加密
 - **推送机制**: WebSocket 长连接 + 心跳保活

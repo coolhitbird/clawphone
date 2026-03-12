@@ -34,7 +34,7 @@ def test_register():
     print("测试: 注册号码...")
     clear_db()
     phone_id = register("testalias")
-    assert phone_id.isdigit() and len(phone_id) == 10, f"格式错误: {phone_id}"
+    assert phone_id.isdigit() and len(phone_id) == 13, f"格式错误: {phone_id}"
     print(f"  [OK] 注册成功: {phone_id}")
 
     # 再次注册应返回已有号码
