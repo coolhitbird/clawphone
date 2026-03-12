@@ -53,15 +53,17 @@ async def main():
     net = MockNetwork(my_node_id)
     set_network(net)
 
-    # 2️⃣ 注册号码
+    # 2️⃣ 注册号码（7位随机数字）
     print("1. 注册我的号码...")
     my_phone = register("xiaoxin")
-    print(f"   ✅ 我的号码: {my_phone}\n")
+    print(f"   ✅ 我的号码: {my_phone} (7位数字)\n")
 
-    # 3️⃣ 查询对方号码
-    print("2. 查询好友号码...")
-    brother_node = lookup("@claw_brother_3f9") or "CL-01S-CLIENT-999"
-    print(f"   ✅ 对方的 node_id: {brother_node}\n")
+    # 3️⃣ 查询对方号码（模拟对方已注册）
+    print("2. 模拟对方注册并查询...")
+    # 假设对方注册了 "brother"
+    # 在真实网络中，需要对方先注册，号码才能查到
+    brother_phone = "1234567"  # 假设这个号码已分配
+    print(f"   ✅ 假设对方号码: {brother_phone}\n")
 
     # 4️⃣ 设置消息回调
     print("3. 设置消息接收回调...")
@@ -72,7 +74,7 @@ async def main():
 
     # 5️⃣ 发送呼叫
     print("4. 发送测试呼叫...")
-    success = call("@claw_brother_3f9", "ping - 你在吗？")
+    success = call(brother_phone, "ping - 你在吗？")
     print(f"   {'✅' if success else '❌'} 发送状态: {success}\n")
 
     # 6️⃣ 等待响应
@@ -80,6 +82,7 @@ async def main():
     await asyncio.sleep(3)
 
     print("\n=== 演示结束 ===")
+    print(f"记住我的号码: {my_phone}，下次可以直接呼叫！")
 
 
 if __name__ == "__main__":

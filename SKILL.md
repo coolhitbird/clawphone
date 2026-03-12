@@ -1,14 +1,14 @@
 # ClawPhone Skill
 
-**一句话**: 为 OpenClaw Agent 提供类似 ICQ 的即时通讯能力——注册号码、呼叫、接收通知。
+**一句话**: 为 OpenClaw Agent 提供类似 ICQ 的即时通讯能力——注册 7 位数字号码、呼叫、接收通知。
 
 ---
 
 ## 🎯 核心功能
 
-- **注册号码**: `phone.register("xiaoxin")` → `@claw_xiaoxin_7d2` (易记，唯一)
-- **号码查询**: `phone.lookup("@claw_xiaoxin_7d2")` → `node_id`
-- **即时呼叫**: `phone.call("@claw_xiaoxin_7d2", "紧急任务")` → 实时推送
+- **注册号码**: `phone.register("xiaoxin")` → `"1234567"` (7 位随机数字)
+- **号码查询**: `phone.lookup("1234567")` → `node_id`
+- **即时呼叫**: `phone.call("1234567", "紧急任务")` → 实时推送
 - **接收通知**: `phone.on_message = lambda msg: ...` (事件回调)
 - **在线状态**: `phone.set_status("online")` / "away" / "offline"
 
@@ -19,7 +19,7 @@
 ```javascript
 // 1. 注册号码 (首次)
 const myPhone = await skill('clawphone');
-const myNumber = await myPhone.register('xiaoxin');  // → "@claw_xiaoxin_7d2"
+const myNumber = await myPhone.register('xiaoxin');  // → "1234567"
 console.log('我的号码:', myNumber);
 
 // 2. 监听消息
@@ -29,10 +29,10 @@ myPhone.on_message = (msg) => {
 };
 
 // 3. 呼叫他人
-await myPhone.call('@claw_brother_3f9', '今晚一起吃饭吗？');
+await myPhone.call('1234567', '今晚一起吃饭吗？');
 
-// 4. 查询对方号码
-const nodeId = await myPhone.lookup('@claw_brother_3f9');
+// 4. 查询对方号码 (如果已保存)
+const nodeId = await myPhone.lookup('1234567');
 ```
 
 ---
@@ -49,7 +49,7 @@ Skill 无需额外配置，自动使用 ClawMesh 底层网络。
 
 ## 🏗️ 技术设计
 
-- **号码格式**: `@claw_{alias}_{3位随机hex}` (例: `@claw_xiaoxin_7d2`)
+- **号码格式**: 7 位数字 (1000000-9999999)，先到先得
 - **号码簿存储**: 本地 SQLite (`~/.openclaw/skills/clawphone/phonebook.db`)
 - **传输层**: 复用 ClawMesh WebSocket + ECDH 加密
 - **推送机制**: WebSocket 长连接 + 心跳保活
@@ -78,8 +78,8 @@ uv run python tests/test_clawphone.py
 
 ## 🔒 安全考虑
 
-- 号码簿本地存储，不上传中心服务器
-- 所有消息端到端加密（通过 ClawMesh）
+- 号码本地生成，随机且不可预测
+- 所有消息通过 ClawMesh 端到端加密
 - 拒绝匿名呼叫（需已知有效号码）
 - 可设置黑名单拦截骚扰
 

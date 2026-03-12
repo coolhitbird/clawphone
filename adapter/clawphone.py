@@ -70,31 +70,30 @@ class ClawPhone:
 
     def register(self, alias: str) -> str:
         """
-        注册一个易记号码
-        格式: @claw_{alias}_{3位随机hex}
-        例: register("xiaoxin") → "@claw_xiaoxin_7d2"
+        注册一个 7 位纯数字号码
+        格式: 随机 7 位数字 (1000000 - 9999999)
+        例: register("xiaoxin") → "1234567"
         """
         if not alias or not alias.isalnum():
             raise ValueError("alias 必须为字母数字组合")
 
-        # 检查是否已注册
+        # 检查是否已注册（同一 alias 返回已有号码）
         conn = sqlite3.connect(DB_PATH)
         cur = conn.cursor()
-        cur.execute("SELECT phone_id FROM phones WHERE alias = ? OR phone_id LIKE ?", (alias, f"@claw_{alias}%"))
+        cur.execute("SELECT phone_id FROM phones WHERE alias = ?", (alias,))
         row = cur.fetchone()
         if row:
             conn.close()
             return row[0]  # 已存在，返回已有号码
 
-        # 生成唯一 phone_id
-        for _ in range(10):  # 尝试10次避免冲突
-            rand = "".join(random.choices(string.hexdigits.lower()[:16], k=3))
-            phone_id = f"@claw_{alias}_{rand}"
+        # 生成唯一 7 位数字号码
+        for _ in range(100):  # 尝试100次避免冲突
+            phone_id = str(random.randint(1000000, 9999999))
             cur.execute("SELECT 1 FROM phones WHERE phone_id = ?", (phone_id,))
             if not cur.fetchone():
                 break
         else:
-            raise RuntimeError("无法生成唯一号码，请换一个 alias")
+            raise RuntimeError("无法生成唯一号码，请重试")
 
         # 保存注册记录
         cur.execute(
@@ -112,33 +111,27 @@ class ClawPhone:
         """
         查询目标号码对应的 node_id
         target 可以是:
-        - 完整 phone_id: "@claw_xiaoxin_7d2"
-        - alias: "xiaoxin" (自动补全)
+        - 7 位数字号码: "1234567"
+        - alias (注册时的别名): "xiaoxin"
         """
-        target = target.strip().lower()
-        if not target.startswith("@"):
-            target = f"@claw_{target}"  # 自动补全
+        target = target.strip()
 
         conn = sqlite3.connect(DB_PATH)
         cur = conn.cursor()
 
-        # 精确匹配 phone_id
-        cur.execute("SELECT node_id FROM phones WHERE phone_id = ?", (target,))
-        row = cur.fetchone()
-        if row and row[0]:
-            conn.close()
-            return row[0]
-
-        # 模糊匹配 alias
-        if target.startswith("@claw_"):
-            alias = target[6:].rsplit("_", 1)[0]  # 提取 alias 部分
-            cur.execute("SELECT node_id FROM phones WHERE alias = ?", (alias,))
+        # 先尝试 phone_id (7位数字)
+        if target.isdigit() and len(target) == 7:
+            cur.execute("SELECT node_id FROM phones WHERE phone_id = ?", (target,))
             row = cur.fetchone()
-            conn.close()
-            return row[0] if row else None
+            if row and row[0]:
+                conn.close()
+                return row[0]
 
+        # 尝试 alias
+        cur.execute("SELECT node_id FROM phones WHERE alias = ?", (target,))
+        row = cur.fetchone()
         conn.close()
-        return None
+        return row[0] if row else None
 
     def call(self, target: str, message: str) -> bool:
         """

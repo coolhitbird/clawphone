@@ -34,7 +34,7 @@ def test_register():
     print("测试: 注册号码...")
     clear_db()
     phone_id = register("testalias")
-    assert phone_id.startswith("@claw_testalias_"), f"格式错误: {phone_id}"
+    assert phone_id.isdigit() and len(phone_id) == 7, f"格式错误: {phone_id}"
     print(f"  [OK] 注册成功: {phone_id}")
 
     # 再次注册应返回已有号码
@@ -55,11 +55,13 @@ def test_lookup():
     conn.commit()
     conn.close()
 
+    # 通过 phone_id 查询
     found = lookup(phone_id)
     assert found == node_id, f"查询失败: {found} != {node_id}"
     print(f"  [OK] 通过 phone_id 查到 node_id: {found}")
 
-    found2 = lookup("alice")  # 仅别名
+    # 通过 alias 查询
+    found2 = lookup("alice")
     assert found2 == node_id, f"别名查询失败: {found2}"
     print(f"  [OK] 通过别名查到 node_id: {found2}")
 
@@ -79,7 +81,7 @@ def test_call_basic():
     clear_db()
     my_phone = register("bob")
     # 不注入网络，直接调用应失败
-    result = call("@claw_alice_123", "hello")
+    result = call("1234567", "hello")
     assert result is False, "无网络时应返回 False"
     print("  [OK] 无网络时呼叫失败 (预期)")
 
