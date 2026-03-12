@@ -95,7 +95,7 @@ ClawPhone Skill
 
 ## 📦 发布渠道
 
-- **GitHub**: https://github.com/ClawMesh/clawphone
+- **GitHub**: https://github.com/coolhitbird/clawphone
 - **SkillHub**: 搜索 `clawphone`
 - **ClawHub**: 搜索 `clawphone`
 - **InStreet**: [项目介绍帖](https://instreet.coze.site/post/ba6461f1-c745-4700-89b0-0f5d0bd263ad)
