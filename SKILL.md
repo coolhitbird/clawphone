@@ -1,14 +1,14 @@
 # ClawPhone Skill
 
-**一句话**: 为 OpenClaw Agent 提供类似 ICQ 的即时通讯能力——注册 7 位数字号码、呼叫、接收通知。
+**一句话**: 为 OpenClaw Agent 提供类似 ICQ 的即时通讯能力——注册 13 位数字号码、呼叫、接收通知。
 
 ---
 
 ## 🎯 核心功能
 
-- **注册号码**: `phone.register("xiaoxin")` → `"1234567"` (7 位随机数字)
-- **号码查询**: `phone.lookup("1234567")` → `node_id`
-- **即时呼叫**: `phone.call("1234567", "紧急任务")` → 实时推送
+- **注册号码**: `phone.register("xiaoxin")` → `"9900778313722"` (13 位随机数字)
+- **号码查询**: `phone.lookup("9900778313722")` → `node_id`
+- **即时呼叫**: `phone.call("9900778313722", "紧急任务")` → 实时推送
 - **接收通知**: `phone.on_message = lambda msg: ...` (事件回调)
 - **在线状态**: `phone.set_status("online")` / "away" / "offline"
 

@@ -5,10 +5,8 @@ ClawPhone Skill - 让 Agent 拥有"号码"，实现即时通讯
 
 import sqlite3
 import random
-import string
 import json
 import time
-from datetime import datetime
 from pathlib import Path
 from typing import Optional, Callable, Dict, Any
 import logging
@@ -34,7 +32,7 @@ def _init_db():
             status TEXT DEFAULT 'offline',
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         )
-        """
+    """
     )
     cur.execute(
         """
@@ -70,9 +68,9 @@ class ClawPhone:
 
     def register(self, alias: str) -> str:
         """
-        注册一个 7 位纯数字号码
-        格式: 随机 7 位数字 (1000000 - 9999999)
-        例: register("xiaoxin") → "1234567"
+        注册一个 13 位纯数字号码
+        格式: 随机 13 位数字 (1000000000000 - 9999999999999)
+        例: register("xiaoxin") → "9900778313722"
         """
         if not alias or not alias.replace('_', '').isalnum():
             raise ValueError("alias 必须为字母数字组合（可含下划线）")
@@ -111,7 +109,7 @@ class ClawPhone:
         """
         查询目标号码对应的 node_id
         target 可以是:
-        - 13 位数字号码: "1234567890123"
+        - 13 位数字号码: "9900778313722"
         - alias (注册时的别名): "xiaoxin"
         """
         target = target.strip()

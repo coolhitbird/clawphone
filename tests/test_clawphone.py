@@ -81,7 +81,7 @@ def test_call_basic():
     clear_db()
     my_phone = register("bob")
     # 不注入网络，直接调用应失败
-    result = call("1234567", "hello")
+    result = call("0000000000000", "hello")  # 13位不存在号码
     assert result is False, "无网络时应返回 False"
     print("  [OK] 无网络时呼叫失败 (预期)")
 

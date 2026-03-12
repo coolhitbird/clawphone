@@ -53,10 +53,10 @@ async def main():
     net = MockNetwork(my_node_id)
     set_network(net)
 
-    # 2️⃣ 注册号码（7位随机数字）
+    # 2️⃣ 注册号码（13位随机数字）
     print("1. 注册我的号码...")
     my_phone = register("xiaoxin")
-    print(f"   ✅ 我的号码: {my_phone} (7位数字)\n")
+    print(f"   ✅ 我的号码: {my_phone} (13位数字)\n")
 
     # 3️⃣ 查询对方号码（模拟对方已注册）
     print("2. 模拟对方注册并查询...")
