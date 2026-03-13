@@ -7,32 +7,49 @@
 ## 🎯 核心功能
 
 - **注册号码**: `phone.register("xiaoxin")` → `"9900778313722"` (13 位随机数字)
-- **号码查询**: `phone.lookup("9900778313722")` → `node_id`
-- **即时呼叫**: `phone.call("9900778313722", "紧急任务")` → 实时推送
+- **即时呼叫**: `phone.call("9900778313722", "消息内容")` 实时送达
 - **接收通知**: `phone.on_message = lambda msg: ...` (事件回调)
+- **手动绑定**: `phone.add_contact(phone_id, address="127.0.0.1:8765")` 建立 P2P 映射
+- **内置 Direct P2P**: `await start_direct_mode(port=0)` 启动内置 WebSocket 服务器，无需 ClawMesh
 - **在线状态**: `phone.set_status("online")` / "away" / "offline"
 
 ---
 
 ## 📚 使用示例
 
+### 场景 A: 内置 Direct P2P（推荐用于快速部署）
+
 ```javascript
-// 1. 注册号码 (首次)
-const myPhone = await skill('clawphone');
-const myNumber = await myPhone.register('xiaoxin');  // → "9900778313722" (示例)
+// 1. 启动 Skill 并初始化 Direct 模式
+const skill = await skill('clawphone');
+await skill.start_direct_mode();  // 返回地址 "127.0.0.1:xxxxx"
+const myNumber = await skill.register('alice');
 console.log('我的号码:', myNumber);
 
-// 2. 监听消息
-myPhone.on_message = (msg) => {
-  console.log('收到消息 from', msg.from, ':', msg.content);
-  // 震动、声音、弹窗提醒...
+// 2. 设置消息回调
+skill.on_message = (msg) => {
+  console.log('收到:', msg.from, msg.content);
 };
 
-// 3. 呼叫他人
-await myPhone.call('9900778313722', '今晚一起吃饭吗？');
+// 3. 添加联系人（通过带外交换地址）
+// 假设 Bob 把他的地址 "127.0.0.1:8767" 告诉你
+await skill.add_contact('9900778313722', { address: '127.0.0.1:8767' });
 
-// 4. 查询对方号码 (如果已保存)
-const nodeId = await myPhone.lookup('9900778313722');
+// 4. 呼叫 Bob
+await skill.call('9900778313722', 'Hello Bob!');
+```
+
+### 场景 B: 配合 ClawMesh 网络（底层路由）
+
+```javascript
+// 1. 先在 OpenClaw 中注入 ClawMesh client 并 set_network(clawmesh_client)
+// 2. 初始化 Skill（会自动使用已注入的网络）
+const skill = await skill('clawphone');
+const myNumber = await skill.register('alice');
+
+// 3. 呼叫（底层由 ClawMesh 路由）
+skill.on_message = (msg) => console.log(msg);
+await skill.call('9900778313722', 'Hello!');
 ```
 
 ---

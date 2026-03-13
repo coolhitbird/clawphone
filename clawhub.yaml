@@ -1,0 +1,196 @@
+# ClawHub 发布配置 (clawphone v1.1.0)
+
+name: clawphone
+version: 1.1.0
+title: ClawPhone - Agent 即时通讯 Skill
+description: 为 OpenClaw Agent 提供类似 ICQ 的即时通讯能力——注册 13 位数字号码、呼叫、实时接收通知
+author: ClawMesh Team
+email: contact@clawmesh.org  # 待补充
+homepage: https://github.com/coolhitbird/clawphone
+license: Apache-2.0
+tags:
+  - communication
+  - instant-messaging
+  - agent
+  - p2p
+  - clawmesh
+
+# 兼容性
+compatibility:
+  openclaw: ">=1.0.0"
+  python: ">=3.10"
+
+# 依赖
+dependencies:
+  - name: clawmesh
+    version: ">=1.0.0"
+    required: true
+    description: 底层 P2P 通信网络（可选：Direct P2P 模式不依赖）
+
+# 能力定义
+capabilities:
+  - id: register
+    name: 注册号码
+    description: 生成唯一的 13 位数字号码
+    inputs:
+      - name: alias
+        type: string
+        required: true
+        description: 易记别名
+    outputs:
+      - name: phone_id
+        type: string
+        description: 13 位随机号码
+
+  - id: call
+    name: 呼叫
+    description: 向目标号码发送即时消息
+    inputs:
+      - name: target
+        type: string
+        required: true
+        description: 目标号码或已绑定的 alias
+      - name: message
+        type: string
+        required: true
+        description: 消息内容
+    outputs:
+      - name: success
+        type: bool
+        description: 发送是否成功
+
+  - id: lookup
+    name: 查询
+    description: 根据号码查找对应的 node_id
+    inputs:
+      - name: phone_id
+        type: string
+        required: true
+    outputs:
+      - name: node_id
+        type: string
+
+  - id: add_contact
+    name: 添加联系人
+    description: 手动绑定 phone_id 与地址(node_id 或 host:port)
+    inputs:
+      - name: alias
+        type: string
+      - name: phone_id
+        type: string
+      - name: address
+        type: string
+        description: "Direct 模式: 'host:port'; ClawMesh 模式: node_id"
+
+  - id: set_status
+    name: 设置状态
+    description: 设置在线状态
+    inputs:
+      - name: status
+        type: enum[online,away,offline]
+        required: true
+
+  - id: on_message
+    name: 消息回调
+    description: 设置接收消息的事件处理器
+    inputs:
+      - name: handler
+        type: function
+        description: 回调函数(msg: dict)
+
+  - id: start_direct_mode
+    name: 启动 Direct 模式
+    description: 启动内置 WebSocket 服务器，用于点对点直连
+    inputs: []
+    outputs:
+      - name: address
+        type: string
+        description: 本机监听地址 "host:port"
+
+# 安装说明
+installation:
+  methods:
+    - name: ClawHub 一键安装
+      command: clawhub install clawphone
+    - name: 手动克隆
+      command: git clone https://github.com/coolhitbird/clawphone.git ~/.openclaw/workspace/skills/clawphone
+
+# 快速示例
+examples:
+  - title: Direct P2P 双机通信
+    code: |
+      from skills.clawphone.adapter import ClawPhone, DirectAdapter
+
+      # Alice
+      alice = ClawPhone()
+      alice_adapter = DirectAdapter("ALICE", listen_port=8766)
+      alice.set_adapter(alice_adapter)
+      alice_adapter.start()
+      alice_num = alice.register("alice")
+
+      # Bob
+      bob = ClawPhone()
+      bob_adapter = DirectAdapter("BOB", listen_port=8767)
+      bob.set_adapter(bob_adapter)
+      bob_adapter.start()
+      bob_num = bob.register("bob")
+
+      # 绑定
+      alice.add_contact("bob", bob_num, bob_adapter.get_my_address())
+      bob.add_contact("alice", alice_num, alice_adapter.get_my_address())
+
+      # 呼叫
+      alice.call(bob_num, "Hello Bob!")
+      bob.on_message = lambda msg: print(f"收到: {msg}")
+
+  - title: ClawMesh 网络模式
+    code: |
+      from skills.clawphone.adapter import ClawPhone
+      from skills.clawmesh.adapter import ClawMeshClient
+
+      # 注入 ClawMesh 客户端
+      mesh = ClawMeshClient()
+      mesh.connect("ws://known-node:8765")
+
+      phone = ClawPhone()
+      phone.set_adapter(mesh)
+      my_num = phone.register("alice")
+      phone.call("9900778313722", "Hello!")
+
+# 风险评估
+risk_assessment:
+  level: low
+  notes:
+    - "所有消息通过 ClawMesh 端到端加密（或本地 Direct P2P）"
+    - "号码簿仅本地存储，无云端同步"
+    - "无中心服务器，隐私风险低"
+    - "Phase 2 规划中：离线缓存、群聊、自动发现"
+
+# 链接
+links:
+  - label: GitHub 仓库
+    url: https://github.com/coolhitbird/clawphone
+  - label: 发布报告
+    url: PUBLISH_REPORT.md
+  - label: 变更日志
+    url: CHANGELOG.md
+
+# 发布信息
+publish_info:
+  package: clawphone-v1.1.0.zip
+  include:
+    - "**/*.py"
+    - "SKILL.md"
+    - "skill.yaml"
+    - "README.md"
+    - "CHANGELOG.md"
+    - "LICENSE"
+    - "examples/**"
+    - "tests/**"
+    - "PUBLISH_GUIDE.md"
+    - "PUBLISH_REPORT.md"
+  exclude:
+    - "__pycache__/**"
+    - "*.pyc"
+    - ".git/**"
+    - "phonebook.db"  # 用户私有数据，不包括在发布包中
