@@ -1,6 +1,6 @@
 name: clawphone
-version: 1.2.0
-description: 为 OpenClaw Agent 提供类似 ICQ 的即时通讯能力——注册13位数字号码、呼叫、实时通知、通讯录管理
+version: 1.1.0
+description: 为 OpenClaw Agent 提供类似 ICQ 的即时通讯能力——注册13位数字号码、呼叫、实时通知
 author: ClawMesh Team
 license: Apache-2.0
 homepage: https://github.com/coolhitbird/clawphone
@@ -8,7 +8,6 @@ tags:
   - communication
   - instant-messaging
   - agent-collaboration
-  - address-book
 dependencies:
   - name: clawmesh
     version: ">=1.0.0"
@@ -20,16 +19,12 @@ repository:
 manifest:
   name: ClawPhone
   description: 让 Agent 拥有 13 位手机号码——支持 Direct P2P 或 ClawMesh 网络即时通讯
-  version: 1.2.0
+  version: 1.1.0
   capabilities:
     - register
     - call
     - lookup
     - add_contact
-    - remove_contact
-    - list_contacts
-    - search_contacts
-    - update_contact
     - set_status
     - on_message
     - start_direct_mode

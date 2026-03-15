@@ -8,7 +8,7 @@ import random
 import json
 import time
 from pathlib import Path
-from typing import Optional, Callable, Dict, Any, List
+from typing import Optional, Callable, Dict, Any
 import logging
 import asyncio
 
@@ -445,167 +445,6 @@ class ClawPhone:
     def get_my_address(self) -> Optional[str]:
         return self._my_address
 
-    # --- 通讯录管理 (Phase 2) ---
-    def list_contacts(self, filter_tags: Optional[List[str]] = None) -> List[Dict[str, Any]]:
-        """
-        列出所有联系人。
-
-        :param filter_tags: 可选标签过滤列表（AND 逻辑：必须包含所有指定标签）
-        :return: 联系人字典列表，每个包含:
-            - alias
-            - phone_id
-            - node_id
-            - address
-            - status
-            - tags (list)
-            - notes
-            - created_at
-        """
-        conn = sqlite3.connect(DB_PATH)
-        cur = conn.cursor()
-        cur.execute("PRAGMA table_info(phones)")
-        cols = [row[1] for row in cur.fetchall()]
-        has_tags = "tags" in cols
-        has_notes = "notes" in cols
-
-        # 构建 SELECT 字段列表
-        select_fields = ["alias", "phone_id", "node_id", "address", "status", "created_at"]
-        if has_tags:
-            select_fields.append("tags")
-        if has_notes:
-            select_fields.append("notes")
-
-        sql = f"SELECT {', '.join(select_fields)} FROM phones ORDER BY alias"
-        cur.execute(sql)
-        rows = cur.fetchall()
-        conn.close()
-
-        contacts = []
-        for row in rows:
-            contact = {
-                "alias": row[0],
-                "phone_id": row[1],
-                "node_id": row[2],
-                "address": row[3],
-                "status": row[4],
-                "created_at": row[5],
-            }
-            idx = 6
-            if has_tags:
-                tags_json = row[idx] if row[idx] else "[]"
-                contact["tags"] = json.loads(tags_json)
-                idx += 1
-            if has_notes:
-                contact["notes"] = row[idx] or ""
-                idx += 1
-            contacts.append(contact)
-
-        # 标签过滤
-        if filter_tags and has_tags:
-            filtered = []
-            for c in contacts:
-                c_tags = set(c.get("tags", []))
-                if all(tag in c_tags for tag in filter_tags):
-                    filtered.append(c)
-            return filtered
-        return contacts
-
-    def search_contacts(self, query: str, fields: Optional[List[str]] = None) -> List[Dict[str, Any]]:
-        """
-        搜索联系人（模糊匹配）。
-
-        :param query: 搜索关键词
-        :param fields: 限制搜索的字段列表，默认为 ["alias", "phone_id", "notes"]
-        :return: 匹配的联系人列表（结构同 list_contacts）
-        """
-        if not query:
-            return []
-
-        if fields is None:
-            fields = ["alias", "phone_id", "notes"]
-
-        query_lower = query.lower()
-        all_contacts = self.list_contacts()
-        results = []
-
-        for contact in all_contacts:
-            for field in fields:
-                value = contact.get(field, "")
-                if isinstance(value, str) and query_lower in value.lower():
-                    results.append(contact)
-                    break
-        return results
-
-    def remove_contact(self, alias: str) -> bool:
-        """
-        删除联系人（通过 alias）。
-
-        :param alias: 联系人别名
-        :return: 是否成功删除
-        """
-        try:
-            conn = sqlite3.connect(DB_PATH)
-            cur = conn.cursor()
-            cur.execute("DELETE FROM phones WHERE alias = ?", (alias,))
-            deleted = cur.rowcount > 0
-            conn.commit()
-            conn.close()
-            if deleted:
-                logger.info(f"删除联系人: {alias}")
-            else:
-                logger.warning(f"联系人不存在: {alias}")
-            return deleted
-        except Exception as e:
-            logger.error(f"删除联系人失败: {e}")
-            return False
-
-    def update_contact(self, alias: str, **kwargs) -> bool:
-        """
-        更新联系人信息。
-
-        :param alias: 联系人别名（主键）
-        :param kwargs: 可更新字段：phone_id, address, node_id, status, tags (list), notes
-        :return: 是否成功更新
-        """
-        if not kwargs:
-            return False
-
-        # 字段白名单
-        allowed_fields = {"phone_id", "address", "node_id", "status", "tags", "notes"}
-        update_fields = []
-        params = []
-
-        for key, value in kwargs.items():
-            if key not in allowed_fields:
-                logger.warning(f"update_contact: 忽略未知字段 '{key}'")
-                continue
-            if key == "tags" and isinstance(value, list):
-                value = json.dumps(value, ensure_ascii=False)
-            update_fields.append(f"{key} = ?")
-            params.append(value)
-
-        if not update_fields:
-            return False
-
-        params.append(alias)
-        sql = f"UPDATE phones SET {', '.join(update_fields)} WHERE alias = ?"
-
-        try:
-            conn = sqlite3.connect(DB_PATH)
-            cur = conn.cursor()
-            cur.execute(sql, params)
-            updated = cur.rowcount > 0
-            conn.commit()
-            conn.close()
-            if updated:
-                logger.info(f"更新联系人: {alias}, fields={list(kwargs.keys())}")
-            else:
-                logger.warning(f"联系人不存在: {alias}")
-            return updated
-        except Exception as e:
-            logger.error(f"更新联系人失败: {e}")
-            return False
-
 
 # 全局实例
 _phone = ClawPhone()
@@ -615,19 +454,7 @@ _phone = ClawPhone()
 def skill_main(**kwargs):
     return {
         "phone_id": _phone.get_my_phone(),
-        "capabilities": [
-            "register",
-            "call",
-            "lookup",
-            "set_status",
-            "on_message",
-            "add_contact",
-            "remove_contact",
-            "list_contacts",
-            "search_contacts",
-            "update_contact",
-            "start_direct_mode"
-        ]
+        "capabilities": ["register", "call", "lookup", "set_status", "on_message", "add_contact", "start_direct_mode"]
     }
 
 
@@ -672,29 +499,3 @@ async def start_direct_mode(port: int = 0) -> str:
     address = adapter.start()
     _phone.set_adapter(adapter)
     return address
-
-
-# --- 通讯录管理 API (Phase 2) ---
-def add_contact(alias: str, phone_id: Optional[str] = None, address: Optional[str] = None, via: str = "direct") -> bool:
-    """添加联系人（向电话号码簿）"""
-    return _phone.add_contact(alias, phone_id, address, via)
-
-
-def list_contacts(filter_tags: Optional[List[str]] = None) -> List[Dict[str, Any]]:
-    """列出所有联系人（可选按标签过滤）"""
-    return _phone.list_contacts(filter_tags)
-
-
-def search_contacts(query: str, fields: Optional[List[str]] = None) -> List[Dict[str, Any]]:
-    """搜索联系人（模糊匹配 alias, phone_id, notes）"""
-    return _phone.search_contacts(query, fields)
-
-
-def remove_contact(alias: str) -> bool:
-    """删除联系人"""
-    return _phone.remove_contact(alias)
-
-
-def update_contact(alias: str, **kwargs) -> bool:
-    """更新联系人信息（支持 phone_id, address, node_id, status, tags, notes）"""
-    return _phone.update_contact(alias, **kwargs)

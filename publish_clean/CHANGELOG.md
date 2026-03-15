@@ -4,26 +4,6 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [1.2.0] - 2026-03-15
-
-### Added
-- **通讯录管理 API**:
-  - `list_contacts(filter_tags=None)` - 列出所有联系人，支持按标签过滤
-  - `search_contacts(query, fields=None)` - 模糊搜索（别名、号码、备注）
-  - `update_contact(alias, **kwargs)` - 更新联系人（状态、备注、标签）
-  - `remove_contact(alias)` - 删除联系人
-- **标签系统** - 为联系人添加自定义标签（JSON 数组存储）
-- **备注字段** - `notes` 列用于保存额外信息
-- **数据库迁移** - `migrate_phase2.py` 自动添加 `tags` 和 `notes` 字段
-- **演示脚本** - `examples/address_book_demo.py` 展示通讯录功能
-- **单元测试** - `tests/test_address_book.py`（10 个测试用例）
-
-### Changed
-- 数据库 `phones` 表新增 `tags` (TEXT, JSON) 和 `notes` (TEXT) 列
-- 所有联系人操作使用原子事务，保证数据一致性
-
----
-
 ## [1.1.0] - 2026-03-13
 
 ### Added

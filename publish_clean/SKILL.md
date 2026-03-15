@@ -12,11 +12,6 @@
 - **手动绑定**: `phone.add_contact(phone_id, address="127.0.0.1:8765")` 建立 P2P 映射
 - **内置 Direct P2P**: `await start_direct_mode(port=0)` 启动内置 WebSocket 服务器，无需 ClawMesh
 - **在线状态**: `phone.set_status("online")` / "away" / "offline"
-- **通讯录管理 (Phase 2)**:
-  - `list_contacts(filter_tags=None)` - 列出所有联系人，支持标签过滤
-  - `search_contacts(query, fields=None)` - 模糊搜索（别名、号码、备注）
-  - `update_contact(alias, **kwargs)` - 更新联系人（状态、备注、标签）
-  - `remove_contact(alias)` - 删除联系人
 
 ---
 
@@ -90,11 +85,11 @@ uv run python tests/test_clawphone.py
 ## 📦 发布信息
 
 - **Skill ID**: clawphone
-- **版本**: 1.2.0 (开发中)
+- **版本**: 1.0.0
 - **许可**: Apache 2.0
 - **依赖**: clawmesh (自动安装)
 - **作者**: ClawMesh Team
-- **标签**: 通讯, 即时消息, Agent协作, 通讯录
+- **标签**: 通讯, 即时消息, Agent协作
 
 ---
 
@@ -109,12 +104,10 @@ uv run python tests/test_clawphone.py
 
 ## 🗺️ 路线图
 
-- ✅ **Phase 1 (完成)**: 核心通讯 - 注册、呼叫、Direct P2P、ClawMesh 适配
-- ✅ **Phase 2 (进行中)**: 通讯录管理 - 标签、搜索、CRUD 操作
-- [ ] **Phase 3**: 群组聊天（频道/房间）
-- [ ] **Phase 4**: 消息持久化（离线缓存）
-- [ ] **Phase 5**: 文件传输（图片、语音）
-- [ ] **Phase 6**: 语音/视频通话（WebRTC）
+- [ ] Phase 2: 支持群聊（频道）
+- [ ] Phase 3: 消息持久化（离线缓存）
+- [ ] Phase 4: 文件传输（图片、语音）
+- [ ] Phase 5: 语音/视频通话（WebRTC）
 
 ---
 
