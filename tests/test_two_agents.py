@@ -15,7 +15,14 @@ import sys
 import os
 
 # 添加项目根目录到 path
-sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
+script_dir = os.path.dirname(os.path.abspath(__file__))
+workspace_root = os.path.dirname(os.path.dirname(script_dir))
+sys.path.insert(0, workspace_root)
+
+# 尝试添加 ClawMesh 路径
+clawmesh_path = os.path.join(workspace_root, "projects", "OpenClaw-Network")
+if os.path.exists(clawmesh_path):
+    sys.path.insert(0, clawmesh_path)
 
 from node.server import ClawMeshServer
 from node.client import ClawMeshClient

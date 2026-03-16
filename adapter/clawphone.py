@@ -146,9 +146,16 @@ class ClawPhone:
         """注入通用网络适配器"""
         self._adapter = adapter
         self._restore_registration()
-        # 如果适配器有 on_message 设置（ClawMesh 方式）
-        if hasattr(adapter, 'on_message'):
-            adapter.on_message = self._handle_network_message
+        
+        # 区分适配器类型
+        if hasattr(adapter, 'get_my_address'):
+            # DirectAdapter：调用 on_message 方法设置回调
+            adapter.on_message(self._handle_network_message)
+        else:
+            # ClawMesh 风格适配器：直接设置 on_message 属性
+            if hasattr(adapter, 'on_message'):
+                adapter.on_message = self._handle_network_message
+                
         logger.info(f"Adapter set: {type(adapter).__name__}")
 
     # 兼容旧名
@@ -172,6 +179,7 @@ class ClawPhone:
         row = cur.fetchone()
         if row:
             conn.close()
+            self._my_phone_id = row[0]  # 已存在也要设置 my_phone_id
             return row[0]  # 已存在
 
         # 生成唯一 13 位数字
@@ -357,10 +365,15 @@ class ClawPhone:
         if self._adapter and hasattr(self._adapter, 'on_message'):
             self._adapter.on_message = self._handle_network_message
 
-    # --- 网络消息处理（ClawMesh 模式）---
-    def _handle_network_message(self, raw_message: str):
+    # --- 网络消息处理 ---
+    def _handle_network_message(self, message):
         try:
-            msg = json.loads(raw_message)
+            # 支持字符串（ClawMesh）和字典（DirectAdapter）
+            if isinstance(message, str):
+                msg = json.loads(message)
+            else:
+                msg = message
+                
             if msg.get("type") in ("call", "message"):
                 if self._on_message:
                     self._on_message(msg)
@@ -399,18 +412,19 @@ class ClawPhone:
             logger.info(f"恢复号码: {self._my_phone_id}, address: {self._my_address or 'N/A'}")
 
     # --- 手动添加联系人 ---
-    def add_contact(self, alias: str, phone_id: Optional[str] = None, address: Optional[str] = None, via: str = "direct") -> bool:
+    def add_contact(self, alias: str, phone_id: Optional[str] = None, address: Optional[str] = None, node_id: Optional[str] = None, via: str = "direct") -> bool:
         """添加联系人。
         - alias: 联系人的别名（主键，必须唯一且非空）
         - phone_id: 对方的号码（可选，但建议提供）
-        - address: 对方的网络地址（可选，但建议提供）
-        - via: 网络类型 (如 "direct", "clawmesh")
+        - address: 对方的网络地址（可选，Direct P2P 模式使用）
+        - node_id: 对方的节点 ID（可选，ClawMesh 模式使用）
+        - via: 网络类型 (如 "direct", "clawmesh")，仅用于标记，不存储到数据库
         """
         if not alias:
             logger.warning("add_contact: alias is required")
             return False
-        if not phone_id and not address:
-            logger.warning("add_contact: at least phone_id or address required")
+        if not phone_id and not address and not node_id:
+            logger.warning("add_contact: at least one of phone_id, address, or node_id required")
             return False
         try:
             conn = sqlite3.connect(DB_PATH)
@@ -420,20 +434,21 @@ class ClawPhone:
             has_address = "address" in cols
             has_public_key = "public_key" in cols
 
+            # 根据表结构决定插入字段
             if has_address and has_public_key:
                 sql = "INSERT OR REPLACE INTO phones (alias, phone_id, node_id, address, public_key, status) VALUES (?, ?, ?, ?, ?, ?)"
-                params = (alias, phone_id, via, address, None, "online")
+                params = (alias, phone_id, node_id, address, None, "online")
             elif has_address:
                 sql = "INSERT OR REPLACE INTO phones (alias, phone_id, node_id, address, status) VALUES (?, ?, ?, ?, ?)"
-                params = (alias, phone_id, via, address, "online")
+                params = (alias, phone_id, node_id, address, "online")
             else:
                 sql = "INSERT OR REPLACE INTO phones (alias, phone_id, node_id, status) VALUES (?, ?, ?, ?)"
-                params = (alias, phone_id, via, "online")
+                params = (alias, phone_id, node_id, "online")
 
             cur.execute(sql, params)
             conn.commit()
             conn.close()
-            logger.info(f"添加联系人: {alias} (phone_id={phone_id}, address={address})")
+            logger.info(f"添加联系人: {alias} (phone_id={phone_id}, node_id={node_id}, address={address})")
             return True
         except Exception as e:
             logger.error(f"添加联系人失败: {e}")
@@ -493,7 +508,11 @@ class ClawPhone:
             idx = 6
             if has_tags:
                 tags_json = row[idx] if row[idx] else "[]"
-                contact["tags"] = json.loads(tags_json)
+                try:
+                    contact["tags"] = json.loads(tags_json)
+                except json.JSONDecodeError:
+                    logger.warning(f"Invalid tags JSON for contact {contact['alias']}: {tags_json}")
+                    contact["tags"] = []
                 idx += 1
             if has_notes:
                 contact["notes"] = row[idx] or ""
@@ -675,9 +694,17 @@ async def start_direct_mode(port: int = 0) -> str:
 
 
 # --- 通讯录管理 API (Phase 2) ---
-def add_contact(alias: str, phone_id: Optional[str] = None, address: Optional[str] = None, via: str = "direct") -> bool:
-    """添加联系人（向电话号码簿）"""
-    return _phone.add_contact(alias, phone_id, address, via)
+def add_contact(alias: str, phone_id: Optional[str] = None, address: Optional[str] = None, node_id: Optional[str] = None, via: str = "direct") -> bool:
+    """添加联系人（向电话号码簿）
+
+    :param alias: 联系人别名（主键）
+    :param phone_id: 13位号码
+    :param address: 网络地址（如 "127.0.0.1:8766"）
+    :param node_id: ClawMesh 节点 ID（可选）
+    :param via: 网络类型（仅日志，不存储）
+    :return: 是否成功
+    """
+    return _phone.add_contact(alias, phone_id, address, node_id, via)
 
 
 def list_contacts(filter_tags: Optional[List[str]] = None) -> List[Dict[str, Any]]:

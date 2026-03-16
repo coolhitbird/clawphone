@@ -4,6 +4,16 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.2.1] - 2026-03-16 (紧急修复)
+
+### Fixed
+- **Critical Bug**: `set_adapter()` 方法错误覆盖 `DirectAdapter.on_message` 导致消息全部丢失
+  - 修复条件：`if hasattr(adapter, 'on_message') and not hasattr(adapter, 'get_my_address')`
+  - 现在正确区分 ClawMesh 适配器和 DirectAdapter，DirectAdapter 回调不再被覆盖
+  - 消息接收恢复正常，5/5 测试用例全部通过
+
+---
+
 ## [1.2.0] - 2026-03-15
 
 ### Added

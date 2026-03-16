@@ -24,6 +24,7 @@ alice_adapter = DirectAdapter("ALICE", listen_port=8766)
 alice_addr = alice_adapter.start()   # 应该是同步返回字符串
 alice.set_adapter(alice_adapter)
 alice_num = alice.register("alice")
+
 print(f"Alice: 号码={alice_num}, 地址={alice_addr}, type={type(alice_addr)}")
 
 # Bob
@@ -69,7 +70,7 @@ try:
     print(f"  发送结果: {ok}, type: {type(ok)}")
 except Exception as e:
     print(f"  异常: {e}")
-import time; time.sleep(0.5)
+import time; time.sleep(2)
 
 # 测试 Bob -> Alice
 print("[测试] Bob 呼叫 Alice...")
