@@ -4,6 +4,17 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.2.3] - 2026-03-16 (Bug 修复)
+
+### Fixed
+- **Migration Import Bug**: `_init_db()` 中 `from .migrate_phase2 import migrate_phase2` 路径错误
+  - 现在同时支持两种调用方式：
+    - 作为包导入：`from .migrate_phase2`
+    - 直接运行：`from migrate_phase2`
+  - 确保自动迁移在任何环境下都能成功执行
+
+---
+
 ## [1.2.2] - 2026-03-16 (自动化改进)
 
 ### Fixed

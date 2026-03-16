@@ -59,7 +59,12 @@ def _init_db():
 
     # 自动执行 Phase2 迁移（新增 tags/notes 字段）
     try:
-        from .migrate_phase2 import migrate_phase2
+        try:
+            # 作为包导入时
+            from .migrate_phase2 import migrate_phase2
+        except ImportError:
+            # 直接运行时
+            from migrate_phase2 import migrate_phase2
         migrate_phase2()
         print("[DB] 自动执行 Phase2 迁移: 新增 tags/notes 字段")
     except Exception as e:
