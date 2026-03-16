@@ -57,6 +57,14 @@ def _init_db():
     conn.commit()
     conn.close()
 
+    # 自动执行 Phase2 迁移（新增 tags/notes 字段）
+    try:
+        from .migrate_phase2 import migrate_phase2
+        migrate_phase2()
+        print("[DB] 自动执行 Phase2 迁移: 新增 tags/notes 字段")
+    except Exception as e:
+        logger.warning(f"[DB] Phase2 迁移失败: {e}")
+
 
 class DirectAdapter:
     """直接 WebSocket 通信适配器（无中心服务器）"""

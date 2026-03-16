@@ -4,6 +4,15 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.2.2] - 2026-03-16 (自动化改进)
+
+### Fixed
+- **Migration Issue**: `migrate_phase2.py` 未在数据库初始化时自动执行，新用户需手动运行迁移脚本才能使用通讯录功能
+  - 现在 `_init_db()` 自动调用 `migrate_phase2()`，确保首次启动即自动添加 `tags` 和 `notes` 字段
+  - 新用户无需手动执行迁移，开箱即用
+
+---
+
 ## [1.2.1] - 2026-03-16 (紧急修复)
 
 ### Fixed
