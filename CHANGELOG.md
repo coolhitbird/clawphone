@@ -4,6 +4,15 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.2.4] - 2026-03-16 (Bug 修复)
+
+### Fixed
+- **Migration Import Conflict**: `migrate_phase2` 模块名与函数名冲突导致 `cannot import name 'migrate_phase2' from 'migrate_phase2'`
+  - 现在 **直接内联迁移逻辑** 到 `_init_db()`，完全绕过 import 问题
+  - 确保自动迁移在任何执行环境下都能成功执行
+
+---
+
 ## [1.2.3] - 2026-03-16 (Bug 修复)
 
 ### Fixed

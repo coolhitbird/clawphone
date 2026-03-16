@@ -57,16 +57,25 @@ def _init_db():
     conn.commit()
     conn.close()
 
-    # 自动执行 Phase2 迁移（新增 tags/notes 字段）
+    # 自动执行 Phase2 迁移（新增 tags/notes 字段） - 内联避免 import 冲突
     try:
-        try:
-            # 作为包导入时
-            from .migrate_phase2 import migrate_phase2
-        except ImportError:
-            # 直接运行时
-            from migrate_phase2 import migrate_phase2
-        migrate_phase2()
-        print("[DB] 自动执行 Phase2 迁移: 新增 tags/notes 字段")
+        import sqlite3
+        from pathlib import Path
+        db_path = Path.home() / ".openclaw" / "skills" / "clawphone" / "phonebook.db"
+        conn2 = sqlite3.connect(db_path)
+        cur2 = conn2.cursor()
+        cur2.execute("PRAGMA table_info(phones)")
+        cols2 = {row[1] for row in cur2.fetchall()}
+        if "tags" not in cols2:
+            cur2.execute("ALTER TABLE phones ADD COLUMN tags TEXT")
+            cur2.execute("UPDATE phones SET tags = '[]' WHERE tags IS NULL")
+            print("[DB] 自动迁移: 添加 tags 列并初始化")
+        if "notes" not in cols2:
+            cur2.execute("ALTER TABLE phones ADD COLUMN notes TEXT")
+            print("[DB] 自动迁移: 添加 notes 列")
+        conn2.commit()
+        conn2.close()
+        print("[DB] Phase2 迁移完成")
     except Exception as e:
         logger.warning(f"[DB] Phase2 迁移失败: {e}")
 
