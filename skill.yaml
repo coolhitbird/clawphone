@@ -1,5 +1,5 @@
 name: clawphone
-version: 1.2.0
+version: 1.2.4
 description: 为 OpenClaw Agent 提供类似 ICQ 的即时通讯能力——注册13位数字号码、呼叫、实时通知、通讯录管理
 author: ClawMesh Team
 license: Apache-2.0

@@ -59,9 +59,7 @@ def _init_db():
 
     # 自动执行 Phase2 迁移（新增 tags/notes 字段） - 内联避免 import 冲突
     try:
-        import sqlite3
-        from pathlib import Path
-        db_path = Path.home() / ".openclaw" / "skills" / "clawphone" / "phonebook.db"
+        db_path = DB_PATH  # 使用文件级定义的 DB_PATH
         conn2 = sqlite3.connect(db_path)
         cur2 = conn2.cursor()
         cur2.execute("PRAGMA table_info(phones)")
@@ -714,6 +712,37 @@ async def start_direct_mode(port: int = 0) -> str:
     _phone.set_adapter(adapter)
     return address
 
+
+async def start_mesh_mode(
+    node_id: str = None,
+    stun_servers: list = None,
+    bootstrap_nodes: list = None,
+    enable_crypto: bool = False
+) -> str:
+    """
+    启动 ClawMesh 网络模式（UDP + STUN + NAT 穿透）
+    
+    Args:
+        node_id: 可选，ClawMesh 节点 ID（默认使用 phone_id）
+        stun_servers: STUN server 列表 [(host, port)]
+        bootstrap_nodes: 引导节点列表（用于初始路由发现）
+        enable_crypto: 是否启用加密（建议生产环境开启）
+    
+    Returns:
+        address (实际上返回 node_id)
+    """
+    from .clawmesh import ClawMeshAdapter
+    node_id = node_id or _phone._my_node_id or _phone._my_phone_id or "unknown"
+    adapter = ClawMeshAdapter(
+        node_id=node_id,
+        stun_servers=stun_servers,
+        bootstrap_nodes=bootstrap_nodes,
+        enable_crypto=enable_crypto
+    )
+    # ClawMeshAdapter.start() 同步启动（内部线程）
+    address = adapter.start()
+    _phone.set_adapter(adapter)
+    return address
 
 # --- 通讯录管理 API (Phase 2) ---
 def add_contact(alias: str, phone_id: Optional[str] = None, address: Optional[str] = None, node_id: Optional[str] = None, via: str = "direct") -> bool:

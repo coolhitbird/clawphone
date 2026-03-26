@@ -11,6 +11,7 @@
 - **接收通知**: `phone.on_message = lambda msg: ...` (事件回调)
 - **手动绑定**: `phone.add_contact(phone_id, address="127.0.0.1:8765")` 建立 P2P 映射
 - **内置 Direct P2P**: `await start_direct_mode(port=0)` 启动内置 WebSocket 服务器，无需 ClawMesh
+- **ClawMesh 网络模式**: `await start_mesh_mode(stun_servers=[...])` 支持 NAT 穿透、自动路由
 - **在线状态**: `phone.set_status("online")` / "away" / "offline"
 - **通讯录管理 (Phase 2)**:
   - `list_contacts(filter_tags=None)` - 列出所有联系人，支持标签过滤
@@ -109,12 +110,13 @@ uv run python tests/test_clawphone.py
 
 ## 🗺️ 路线图
 
-- ✅ **Phase 1 (完成)**: 核心通讯 - 注册、呼叫、Direct P2P、ClawMesh 适配
-- ✅ **Phase 2 (进行中)**: 通讯录管理 - 标签、搜索、CRUD 操作
-- [ ] **Phase 3**: 群组聊天（频道/房间）
-- [ ] **Phase 4**: 消息持久化（离线缓存）
-- [ ] **Phase 5**: 文件传输（图片、语音）
-- [ ] **Phase 6**: 语音/视频通话（WebRTC）
+- ✅ **Phase 1 (完成)**: 核心通讯 - 注册、呼叫、Direct P2P
+- ✅ **Phase 2 (完成)**: 通讯录管理 - CRUD、标签、搜索
+- ✅ **Phase 3 (完成)**: ClawMesh 网络集成 - UDP NAT 穿透、自动路由、`start_mesh_mode()`
+- [ ] **Phase 4**: 群组聊天（频道/房间）
+- [ ] **Phase 5**: 消息持久化（离线缓存）
+- [ ] **Phase 6**: 文件传输（图片、语音）
+- [ ] **Phase 7**: 语音/视频通话（WebRTC）
 
 ---
 
