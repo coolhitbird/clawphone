@@ -100,13 +100,17 @@ async def run_integration_test():
         # === 手动交换 endpoint 并添加到 connection pool ===
         logger.info("=== Exchanging endpoints manually ===")
         
+        # 使用 127.0.0.1 替换 0.0.0.0 作为目标地址
+        addr_a_fixed = ('127.0.0.1', addr_a[1])
+        addr_b_fixed = ('127.0.0.1', addr_b[1])
+        
         # A 添加 B 的 endpoint
-        await transport_a.connection_pool.add(phone_b_id, addr_b)
-        logger.info(f"A added B endpoint: {addr_b}")
+        await transport_a.connection_pool.add(phone_b_id, addr_b_fixed)
+        logger.info(f"A added B endpoint: {addr_b_fixed}")
         
         # B 添加 A 的 endpoint
-        await transport_b.connection_pool.add(phone_a_id, addr_a)
-        logger.info(f"B added A endpoint: {addr_a}")
+        await transport_b.connection_pool.add(phone_a_id, addr_a_fixed)
+        logger.info(f"B added A endpoint: {addr_a_fixed}")
         
         # 手动添加路由条目（下一跳就是目标本身）
         await transport_a.routing.add(phone_b_id, phone_b_id, metric=1, source="manual")
