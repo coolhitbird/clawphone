@@ -346,8 +346,8 @@ class ClawPhone:
                     content = json.dumps(payload, ensure_ascii=False)
                     success = self._adapter.send_message(node_id, content, msg_type=payload.get("type", "custom"))
                 elif hasattr(self._adapter, 'send'):
-                    raw = json.dumps(payload, ensure_ascii=False)
-                    success = self._adapter.send(node_id, raw)
+                    # ClawMeshAdapter 接收字典 payload，不是 JSON 字符串
+                    success = self._adapter.send(node_id, payload)
                 else:
                     raise NotImplementedError("适配器无 send/send_message")
             if success:
