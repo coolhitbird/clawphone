@@ -4,6 +4,29 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.3.0-rc.1] - 2026-03-27 (Release Candidate)
+
+### Added
+- **ClawMesh Phase 3.5: 多实例支持**:
+  - `ClawPhone.__init__(db_path=None)` 支持自定义数据库路径
+  - 独立多实例运行，互不干扰
+- **集成测试**: 新增 `test_direct_integration.py` 验证直连模式
+
+### Changed
+- **UdpDirectTransport 优化**:
+  - STUN 可选模式（无服务器时自动禁用）
+  - send() 快速路径：优先使用 connection_pool，避免重复 STUN query
+- **Handler 兼容性**: `_handle_message` 支持同步和异步两种消息处理函数
+
+### Fixed
+- `call()` 方法对 ClawMeshAdapter 的 payload 传递格式（改为字典）
+- `start_mesh_mode()` 实例化改造，保持全局函数向后兼容
+
+### Dependencies
+- `clawmesh >= 2.0.0`
+
+---
+
 ## [1.2.4] - 2026-03-16 (Bug 修复)
 
 ### Fixed
