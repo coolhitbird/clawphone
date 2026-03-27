@@ -19,9 +19,9 @@ DB_PATH = Path.home() / ".openclaw" / "skills" / "clawphone" / "phonebook.db"
 DB_PATH.parent.mkdir(parents=True, exist_ok=True)
 
 
-def _init_db():
+def _init_db(db_path: Path):
     """初始化 SQLite 数据库（含 address 字段）"""
-    conn = sqlite3.connect(DB_PATH)
+    conn = sqlite3.connect(db_path)
     cur = conn.cursor()
     # 创建 phones 表（如果不存在）
     cur.execute(
@@ -59,7 +59,6 @@ def _init_db():
 
     # 自动执行 Phase2 迁移（新增 tags/notes 字段） - 内联避免 import 冲突
     try:
-        db_path = DB_PATH  # 使用文件级定义的 DB_PATH
         conn2 = sqlite3.connect(db_path)
         cur2 = conn2.cursor()
         cur2.execute("PRAGMA table_info(phones)")
@@ -152,14 +151,28 @@ class DirectAdapter:
 class ClawPhone:
     """核心类（支持多适配器）"""
 
-    def __init__(self):
+    def __init__(self, db_path: str = None):
+        """
+        创建 ClawPhone 实例。
+        
+        Args:
+            db_path: 可选，自定义数据库路径。不指定则使用默认全局路径（单例模式）。
+        """
         self._on_message: Optional[Callable[[Dict[str, Any]], None]] = None
         self._my_phone_id: Optional[str] = None
         self._my_node_id: Optional[str] = None
         self._status = "offline"
         self._adapter = None  # 网络适配器
         self._my_address: Optional[str] = None
-        _init_db()
+        
+        # 确定数据库路径
+        if db_path:
+            self.db_path = Path(db_path)
+        else:
+            self.db_path = DB_PATH  # 默认全局路径
+        
+        # 初始化数据库
+        _init_db(self.db_path)
 
     # --- 适配器管理 ---
     def set_adapter(self, adapter):
@@ -193,7 +206,7 @@ class ClawPhone:
 
         logger.debug(f"[register] called with alias='{alias}', _my_phone_id={self._my_phone_id}, _my_node_id={self._my_node_id}")
 
-        conn = sqlite3.connect(DB_PATH)
+        conn = sqlite3.connect(self.db_path)
         cur = conn.cursor()
         cur.execute("SELECT phone_id FROM phones WHERE alias = ?", (alias,))
         row = cur.fetchone()
@@ -243,7 +256,7 @@ class ClawPhone:
     def lookup(self, target: str) -> Optional[str]:
         """查询 node_id（仅用于 ClawMesh 模式）"""
         target = target.strip()
-        conn = sqlite3.connect(DB_PATH)
+        conn = sqlite3.connect(self.db_path)
         cur = conn.cursor()
         if target.isdigit() and len(target) == 13:
             cur.execute("SELECT node_id FROM phones WHERE phone_id = ?", (target,))
@@ -259,7 +272,7 @@ class ClawPhone:
     def _get_target_info(self, target: str) -> Optional[tuple]:
         """获取目标 (node_id, address)"""
         target = target.strip()
-        conn = sqlite3.connect(DB_PATH)
+        conn = sqlite3.connect(self.db_path)
         cur = conn.cursor()
         cur.execute("PRAGMA table_info(phones)")
         cols = [row[1] for row in cur.fetchall()]
@@ -359,7 +372,7 @@ class ClawPhone:
 
     def _log_call(self, to_phone: str, message: str):
         try:
-            conn = sqlite3.connect(DB_PATH)
+            conn = sqlite3.connect(self.db_path)
             cur = conn.cursor()
             cur.execute("INSERT INTO call_log (from_phone, to_phone, message) VALUES (?, ?, ?)",
                         (self._my_phone_id, to_phone, message))
@@ -367,6 +380,38 @@ class ClawPhone:
             conn.close()
         except Exception as e:
             logger.error(f"记录呼叫日志失败: {e}")
+
+    async def start_mesh_mode(
+        self,
+        node_id: str = None,
+        stun_servers: list = None,
+        bootstrap_nodes: list = None,
+        enable_crypto: bool = False
+    ) -> str:
+        """
+        启动 ClawMesh 网络模式（UDP + STUN + NAT 穿透）
+        
+        Args:
+            node_id: 可选，ClawMesh 节点 ID（默认使用 phone_id）
+            stun_servers: STUN server 列表 [(host, port)]
+            bootstrap_nodes: 引导节点列表（用于初始路由发现）
+            enable_crypto: 是否启用加密（建议生产环境开启）
+        
+        Returns:
+            address (实际上返回 node_id)
+        """
+        from .clawmesh import ClawMeshAdapter
+        node_id = node_id or self._my_node_id or self._my_phone_id or "unknown"
+        adapter = ClawMeshAdapter(
+            node_id=node_id,
+            stun_servers=stun_servers,
+            bootstrap_nodes=bootstrap_nodes,
+            enable_crypto=enable_crypto
+        )
+        # ClawMeshAdapter.start() 同步启动（内部线程）
+        address = adapter.start()
+        self.set_adapter(adapter)
+        return address
 
     # --- 状态与回调 ---
     def set_status(self, status: str):
@@ -402,7 +447,7 @@ class ClawPhone:
 
     # --- 恢复注册 ---
     def _restore_registration(self):
-        conn = sqlite3.connect(DB_PATH)
+        conn = sqlite3.connect(self.db_path)
         cur = conn.cursor()
         cur.execute("PRAGMA table_info(phones)")
         cols = [row[1] for row in cur.fetchall()]
@@ -447,7 +492,7 @@ class ClawPhone:
             logger.warning("add_contact: at least one of phone_id, address, or node_id required")
             return False
         try:
-            conn = sqlite3.connect(DB_PATH)
+            conn = sqlite3.connect(self.db_path)
             cur = conn.cursor()
             cur.execute("PRAGMA table_info(phones)")
             cols = [row[1] for row in cur.fetchall()]
@@ -496,7 +541,7 @@ class ClawPhone:
             - notes
             - created_at
         """
-        conn = sqlite3.connect(DB_PATH)
+        conn = sqlite3.connect(self.db_path)
         cur = conn.cursor()
         cur.execute("PRAGMA table_info(phones)")
         cols = [row[1] for row in cur.fetchall()]
@@ -583,7 +628,7 @@ class ClawPhone:
         :return: 是否成功删除
         """
         try:
-            conn = sqlite3.connect(DB_PATH)
+            conn = sqlite3.connect(self.db_path)
             cur = conn.cursor()
             cur.execute("DELETE FROM phones WHERE alias = ?", (alias,))
             deleted = cur.rowcount > 0
@@ -630,7 +675,7 @@ class ClawPhone:
         sql = f"UPDATE phones SET {', '.join(update_fields)} WHERE alias = ?"
 
         try:
-            conn = sqlite3.connect(DB_PATH)
+            conn = sqlite3.connect(self.db_path)
             cur = conn.cursor()
             cur.execute(sql, params)
             updated = cur.rowcount > 0
@@ -720,29 +765,15 @@ async def start_mesh_mode(
     enable_crypto: bool = False
 ) -> str:
     """
-    启动 ClawMesh 网络模式（UDP + STUN + NAT 穿透）
-    
-    Args:
-        node_id: 可选，ClawMesh 节点 ID（默认使用 phone_id）
-        stun_servers: STUN server 列表 [(host, port)]
-        bootstrap_nodes: 引导节点列表（用于初始路由发现）
-        enable_crypto: 是否启用加密（建议生产环境开启）
-    
-    Returns:
-        address (实际上返回 node_id)
+    全局包装器：调用全局 _phone 实例的 start_mesh_mode。
+    向后兼容，新代码建议直接使用 ClawPhone 实例方法。
     """
-    from .clawmesh import ClawMeshAdapter
-    node_id = node_id or _phone._my_node_id or _phone._my_phone_id or "unknown"
-    adapter = ClawMeshAdapter(
+    return await _phone.start_mesh_mode(
         node_id=node_id,
         stun_servers=stun_servers,
         bootstrap_nodes=bootstrap_nodes,
         enable_crypto=enable_crypto
     )
-    # ClawMeshAdapter.start() 同步启动（内部线程）
-    address = adapter.start()
-    _phone.set_adapter(adapter)
-    return address
 
 # --- 通讯录管理 API (Phase 2) ---
 def add_contact(alias: str, phone_id: Optional[str] = None, address: Optional[str] = None, node_id: Optional[str] = None, via: str = "direct") -> bool:
